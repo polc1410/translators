@@ -9,7 +9,7 @@
 	"inRepository": true,
 	"translatorType": 5,
 	"browserSupport": "gcsibv",
-	"lastUpdated": "2022-03-29 21:26:18"
+	"lastUpdated": "2022-03-30 23:04:36"
 }
 
 /*
@@ -36,7 +36,7 @@
 */
 
 
-async function detectWeb(doc, url) {
+function detectWeb(doc, url) {
 	// TODO: adjust the logic here
 	if (url.includes('/smpc')) {
 		return 'bookSection';
@@ -44,44 +44,43 @@ async function detectWeb(doc, url) {
 	return false;
 }
 
-async function doWeb(doc, url) {
-	await scrape(doc, url);
+function doWeb(doc, url) {
+	scrape(doc, url);
 }
 
-async function scrape(doc, url) {
-	let translator = Zotero.loadTranslator('web');
-	// Embedded Metadata
-	translator.setTranslator('951c027d-74ac-47d4-a107-9c3069ab7b48');
-	translator.setDocument(doc);
+function scrape(doc, url) {
+		var item = new Zotero.Item("bookSection");
+		item.itemType = "bookSection";
+		//item.title = "Manual Title for Now";
+
+		// Start get the creator info
+		var company = ZU.xpathText(doc, '//a[@data-evt="docCompany"]');
+		let creators = [];
+		creators.push({
+				lastName: company,
+				creatorType: 'author',
+				fieldMode: 1
+			});
 	
-	translator.setHandler('itemDone', (_obj, item) => {
 		item.bookTitle = "Electronic Medicines Compendium";
 		item.publisher = "Datapharm";
 		item.place = "Surrey, UK";
-		var company = ZU.xpathText(doc, '//a[@data-evt="docCompany"]');
-		item.creators = ZU.cleanAuthor(
-			company,
-			'author',
-			false
-			);
+		
+		item.creators = creators;
 		item.title =  
-			"Summary of Product Characteristics " +
+			"Summary of Product Characteristics: " +
 			ZU.xpathText(doc, '//div[@class="col-md-12 title"]//h1') ;
 		item.date = ZU.xpathText(doc, '//div[@class="sidebar-module last-updated grey-border side-links no-mob"]//h3').split("Last updated on emc: ")[1];
-		//item.attachments = [{
-		//	url: doc.location.href,
-		//	title: "Snapshot",
-		//	mimeType: "text/html",
-		//	snapshot: false
-		//}];
-		item.attachments = [];
+		item.attachments = [{
+			url: doc.location.href,
+			title: "Snapshot",
+			mimeType: "text/html",
+			snapshot: true
+		}];
+	//	item.attachments = [];
 		item.url = doc.location.href;
 		item.complete();
-	});
 
-	let em = await translator.getTranslatorObject();
-	em.itemType = 'bookSection';
-	await em.doWeb(doc, url);
 }
 
 
